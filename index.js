@@ -21,6 +21,7 @@ async function run() {
         const database = client.db("tourism");
         const resortCollection = database.collection("resort_details");
         const orderCollection = database.collection("orders");
+        const usersCollection = database.collection("users");
 
         // const database = client.db("volunteer_network");
 
@@ -86,7 +87,35 @@ async function run() {
             };
             const result = await orderCollection.updateOne(filter, updateDoc, options)
             res.json(result)
-        })
+        });
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            console.log(req.body);
+            const result = await usersCollection.insertOne(user);
+            console.log(result);
+            res.json(result);
+        });
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email }
+            const options = { upsert: true };
+            const updateDoc = { $set: user }
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.json(result)
+        });
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                console.log(user?.role);
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        });
 
     }
     finally {
